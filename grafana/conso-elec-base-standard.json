@@ -1,0 +1,2733 @@
+{
+ "__inputs": [
+  {
+   "name": "DS_INFLUXDB",
+   "label": "InfluxDB teleinfo",
+   "description": "Base InfluxDB 1.x (InfluxQL) alimentée par teleinfo.py",
+   "type": "datasource",
+   "pluginId": "influxdb",
+   "pluginName": "InfluxDB"
+  }
+ ],
+ "uid": "teleinfo-linky-standard",
+ "title": "Conso Elec - Base Standard",
+ "description": "Téléinfo Linky (mode standard) : puissance, consommation et coût, comparaison N-1, tension, supervision. Nécessite les agrégats de influxdb/setup_downsampling.sh.",
+ "tags": [
+  "énergie",
+  "linky"
+ ],
+ "timezone": "browser",
+ "editable": true,
+ "graphTooltip": 1,
+ "refresh": "30s",
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "timepicker": {
+  "refresh_intervals": [
+   "10s",
+   "30s",
+   "1m",
+   "5m",
+   "15m"
+  ]
+ },
+ "schemaVersion": 41,
+ "templating": {
+  "list": [
+   {
+    "name": "prix_kwh",
+    "label": "Prix du kWh (€ TTC)",
+    "type": "textbox",
+    "query": "0.1952",
+    "current": {
+     "text": "0.1952",
+     "value": "0.1952"
+    },
+    "options": [
+     {
+      "selected": true,
+      "text": "0.1952",
+      "value": "0.1952"
+     }
+    ],
+    "description": "Prix TTC du kWh en option Base (hors abonnement). À ajuster selon ta facture."
+   }
+  ]
+ },
+ "annotations": {
+  "list": [
+   {
+    "builtIn": 1,
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "hide": true,
+    "iconColor": "rgba(0, 211, 255, 1)",
+    "name": "Annotations & Alerts",
+    "type": "dashboard"
+   }
+  ]
+ },
+ "links": [],
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "⚡ Instantané",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   },
+   "panels": []
+  },
+  {
+   "id": 2,
+   "type": "gauge",
+   "title": "Puissance apparente",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT last(\"value\") FROM \"autogen\".\"SINSTS\" WHERE time > now() - 5m"
+    }
+   ],
+   "gridPos": {
+    "h": 6,
+    "w": 5,
+    "x": 0,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "voltamp",
+     "min": 0,
+     "max": 6000,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 4200
+       },
+       {
+        "color": "red",
+        "value": 5400
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "showThresholdMarkers": true,
+    "showThresholdLabels": false
+   },
+   "description": "Puissance instantanée soutirée (SINSTS) par rapport à l'abonnement de 6 kVA."
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Charge abonnement",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT last(\"value\") * 100 / 6000 FROM \"autogen\".\"SINSTS\" WHERE time > now() - 5m"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 3,
+    "x": 5,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 70
+       },
+       {
+        "color": "red",
+        "value": 90
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Courant",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT last(\"value\") FROM \"autogen\".\"IRMS1\" WHERE time > now() - 5m"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 3,
+    "x": 8,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "amp",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 25
+       },
+       {
+        "color": "red",
+        "value": 28
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Tension",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT last(\"value\") FROM \"autogen\".\"URMS1\" WHERE time > now() - 5m"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 3,
+    "x": 11,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 207
+       },
+       {
+        "color": "red",
+        "value": 253
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "description": "Plage réglementaire : 230 V ± 10 % (207 à 253 V)."
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Pic du jour",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT last(\"value\") FROM \"autogen\".\"SMAXSN\" WHERE time > now() - 5m"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 3,
+    "x": 14,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "voltamp",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 4200
+       },
+       {
+        "color": "red",
+        "value": 5400
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "description": "Puissance maximale atteinte aujourd'hui (SMAXSN, calculée par le compteur)."
+  },
+  {
+   "id": 7,
+   "type": "stat",
+   "title": "Index total",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT last(\"value\") / 1000 FROM \"autogen\".\"EAST\" WHERE time > now() - 5m"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 4,
+    "x": 17,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "blue",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "id": 8,
+   "type": "stat",
+   "title": "Collecte (trames / 2 min)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT count(\"value\") FROM \"autogen\".\"SINSTS\" WHERE time > now() - 2m"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 3,
+    "x": 21,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 10
+       },
+       {
+        "color": "green",
+        "value": 50
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "auto",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "description": "Une trame toutes les ~2 s : environ 65 attendues. Rouge = le script teleinfo du Pi ne transmet plus."
+  },
+  {
+   "id": 9,
+   "type": "stat",
+   "title": "Aujourd'hui",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"value\") / 1000 FROM \"autogen\".\"EAST\" WHERE $timeFilter",
+     "alias": "kWh"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"value\") / 1000 * $prix_kwh FROM \"autogen\".\"EAST\" WHERE $timeFilter",
+     "alias": "€"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 5,
+    "x": 5,
+    "y": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 2,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "A"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "timeFrom": "now/d",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 10,
+   "type": "stat",
+   "title": "Mois en cours",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "alias": "kWh"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 * $prix_kwh FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "alias": "€"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 5,
+    "x": 10,
+    "y": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 1,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "A"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "timeFrom": "now/M",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 11,
+   "type": "stat",
+   "title": "Projection fin de mois",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"spread\") * 730 / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "alias": "kWh"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"spread\") * 730 / 1000 * $prix_kwh FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "alias": "€"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 5,
+    "x": 15,
+    "y": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "A"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "description": "Consommation horaire moyenne du mois en cours × 730 h (durée moyenne d'un mois). Hors abonnement.",
+   "timeFrom": "now/M",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 12,
+   "type": "stat",
+   "title": "Talon (30 j)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"talon\") FROM (SELECT min(\"mean\") AS \"talon\" FROM \"downsampled\".\"SINSTS_1h\" WHERE time > now() - 30d GROUP BY time(1d) tz('Europe/Paris'))",
+     "alias": "VA"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"talon\") * 8.76 * $prix_kwh FROM (SELECT min(\"mean\") AS \"talon\" FROM \"downsampled\".\"SINSTS_1h\" WHERE time > now() - 30d GROUP BY time(1d) tz('Europe/Paris'))",
+     "alias": "€ / an"
+    }
+   ],
+   "gridPos": {
+    "h": 3,
+    "w": 4,
+    "x": 20,
+    "y": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "A"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "voltamp"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   },
+   "description": "Consommation de fond : heure la plus basse de chaque journée, moyennée sur 30 jours, et son coût sur un an (VA ≈ W, box, homelab, frigo, veilles...)."
+  },
+  {
+   "id": 13,
+   "type": "row",
+   "title": "📈 Courbe de charge",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 7
+   },
+   "panels": []
+  },
+  {
+   "id": 14,
+   "type": "timeseries",
+   "title": "Puissance apparente (temps réel)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"value\") FROM \"autogen\".\"SINSTS\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Puissance"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "voltamp",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 10,
+      "showPoints": "never",
+      "spanNulls": false,
+      "thresholdsStyle": {
+       "mode": "dashed"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "transparent",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 5400
+       },
+       {
+        "color": "red",
+        "value": 6000
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Données brutes (24h par défaut pour préserver la carte SD). Pour une période plus longue, voir l'historique ci-dessous.",
+   "timeFrom": "24h",
+   "hideTimeOverride": false,
+   "interval": "10s"
+  },
+  {
+   "id": 15,
+   "type": "timeseries",
+   "title": "Historique de puissance (agrégats horaires)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"mean\") FROM \"downsampled\".\"SINSTS_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Moyenne"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT max(\"max\") FROM \"downsampled\".\"SINSTS_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Pic"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "C",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT min(\"min\") FROM \"downsampled\".\"SINSTS_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Mini"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 16
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "voltamp",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 10,
+      "showPoints": "never",
+      "spanNulls": false,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Depuis février 2023. Change la durée via « Relative time » du panneau ou zoome.",
+   "timeFrom": "30d",
+   "hideTimeOverride": false,
+   "interval": "1h"
+  },
+  {
+   "id": 16,
+   "type": "row",
+   "title": "💶 Consommation & coût",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 24
+   },
+   "panels": []
+  },
+  {
+   "id": 17,
+   "type": "timeseries",
+   "title": "Consommation journalière",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT non_negative_difference(last(\"last\")) / 1000 FROM \"downsampled\".\"EAST_1d\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Paris')",
+     "alias": "kWh"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT non_negative_difference(last(\"last\")) / 1000 * $prix_kwh FROM \"downsampled\".\"EAST_1d\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Paris')",
+     "alias": "€"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 25
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "showPoints": "never",
+      "spanNulls": false,
+      "axisSoftMin": 0,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "€"
+      },
+      "properties": [
+       {
+        "id": "custom.hideFrom",
+        "value": {
+         "viz": true,
+         "legend": false,
+         "tooltip": false
+        }
+       },
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "timeFrom": "60d",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 18,
+   "type": "timeseries",
+   "title": "Consommation hebdomadaire (2 ans)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT sum(\"spread\") / 1000 FROM \"downsampled\".\"EAST_1d\" WHERE $timeFilter GROUP BY time(1w, 4d) fill(none) tz('Europe/Paris')",
+     "alias": "kWh"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT sum(\"spread\") / 1000 * $prix_kwh FROM \"downsampled\".\"EAST_1d\" WHERE $timeFilter GROUP BY time(1w, 4d) fill(none) tz('Europe/Paris')",
+     "alias": "€"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 25
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 0,
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "showPoints": "never",
+      "spanNulls": false,
+      "axisSoftMin": 0,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "€"
+      },
+      "properties": [
+       {
+        "id": "custom.hideFrom",
+        "value": {
+         "viz": true,
+         "legend": false,
+         "tooltip": false
+        }
+       },
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Semaines du lundi au dimanche. Deux hivers côte à côte : la comparaison avec l'an dernier se lit directement.",
+   "timeFrom": "2y",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 19,
+   "type": "timeseries",
+   "title": "Talon de consommation (heure la plus basse de chaque jour)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT min(\"mean\") FROM \"downsampled\".\"SINSTS_1h\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Paris')",
+     "alias": "Talon"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 0,
+    "y": 33
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "voltamp",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 20,
+      "showPoints": "never",
+      "spanNulls": false,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Une hausse durable signale un nouvel appareil toujours allumé ou un équipement qui ne se met plus en veille.",
+   "timeFrom": "180d",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 20,
+   "type": "timeseries",
+   "title": "Pic de puissance journalier",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT max(\"max\") FROM \"downsampled\".\"SMAXSN_1d\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Paris')",
+     "alias": "Pic du jour"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 12,
+    "y": 33
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "voltamp",
+     "max": 6000,
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "showPoints": "never",
+      "spanNulls": false,
+      "axisSoftMin": 0,
+      "thresholdsStyle": {
+       "mode": "dashed"
+      },
+      "gradientMode": "scheme"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 4200
+       },
+       {
+        "color": "red",
+        "value": 5400
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Si les pics restent loin de 6 kVA toute l'année, un abonnement inférieur coûterait moins cher.",
+   "timeFrom": "1y",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 21,
+   "type": "row",
+   "title": "📊 Comparaison avec l'année précédente",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 40
+   },
+   "panels": []
+  },
+  {
+   "id": 22,
+   "type": "stat",
+   "title": "Mois en cours vs N-1",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE time >= ${__from}ms - 365d AND time < ${__to}ms - 365d",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N",
+     "type": "reduce",
+     "expression": "A",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N1",
+     "type": "reduce",
+     "expression": "B",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "Delta",
+     "type": "math",
+     "expression": "($N - $N1) / $N1 * 100"
+    }
+   ],
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 0,
+    "y": 41
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Cette année"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N1"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "L'an dernier"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "Delta"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Écart"
+       },
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 0
+          },
+          {
+           "color": "red",
+           "value": 10
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "vertical"
+   },
+   "description": "Du 1er du mois à maintenant, comparé à la même période l'an dernier.",
+   "timeFrom": "now/M",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 23,
+   "type": "stat",
+   "title": "Mois précédent vs N-1",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE time >= ${__from}ms - 365d AND time < ${__to}ms - 365d",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N",
+     "type": "reduce",
+     "expression": "A",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N1",
+     "type": "reduce",
+     "expression": "B",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "Delta",
+     "type": "math",
+     "expression": "($N - $N1) / $N1 * 100"
+    }
+   ],
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 6,
+    "y": 41
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Cette année"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N1"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "L'an dernier"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "Delta"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Écart"
+       },
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 0
+          },
+          {
+           "color": "red",
+           "value": 10
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "vertical"
+   },
+   "description": "Même période décalée de 365 jours.",
+   "timeFrom": "now-1M/M",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 24,
+   "type": "stat",
+   "title": "Année en cours vs N-1",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE time >= ${__from}ms - 365d AND time < ${__to}ms - 365d",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N",
+     "type": "reduce",
+     "expression": "A",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N1",
+     "type": "reduce",
+     "expression": "B",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "Delta",
+     "type": "math",
+     "expression": "($N - $N1) / $N1 * 100"
+    }
+   ],
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 12,
+    "y": 41
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Cette année"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N1"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "L'an dernier"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "Delta"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Écart"
+       },
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 0
+          },
+          {
+           "color": "red",
+           "value": 10
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "vertical"
+   },
+   "description": "Du 1er janvier à maintenant, comparé à la même période l'an dernier.",
+   "timeFrom": "now/y",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 25,
+   "type": "stat",
+   "title": "Période sélectionnée vs N-1",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE $timeFilter",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT spread(\"last\") / 1000 FROM \"downsampled\".\"EAST_1h\" WHERE time >= ${__from}ms - 365d AND time < ${__to}ms - 365d",
+     "hide": true
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N",
+     "type": "reduce",
+     "expression": "A",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "N1",
+     "type": "reduce",
+     "expression": "B",
+     "reducer": "last",
+     "settings": {
+      "mode": "dropNN"
+     }
+    },
+    {
+     "datasource": {
+      "type": "__expr__",
+      "uid": "__expr__"
+     },
+     "refId": "Delta",
+     "type": "math",
+     "expression": "($N - $N1) / $N1 * 100"
+    }
+   ],
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 18,
+    "y": 41
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Cette année"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "N1"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "L'an dernier"
+       },
+       {
+        "id": "unit",
+        "value": "kwatth"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "Delta"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Écart"
+       },
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 0
+          },
+          {
+           "color": "red",
+           "value": 10
+          }
+         ]
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "vertical"
+   },
+   "description": "Suit la période choisie en haut à droite du dashboard."
+  },
+  {
+   "id": 26,
+   "type": "timeseries",
+   "title": "Consommation journalière — l'an dernier sur la même période",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT non_negative_difference(last(\"last\")) / 1000 FROM \"downsampled\".\"EAST_1d\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Paris')",
+     "alias": "kWh (N-1)"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT non_negative_difference(last(\"last\")) / 1000 * $prix_kwh FROM \"downsampled\".\"EAST_1d\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Paris')",
+     "alias": "€"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 24,
+    "x": 0,
+    "y": 46
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "showPoints": "never",
+      "spanNulls": false,
+      "axisSoftMin": 0,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "€"
+      },
+      "properties": [
+       {
+        "id": "custom.hideFrom",
+        "value": {
+         "viz": true,
+         "legend": false,
+         "tooltip": false
+        }
+       },
+       {
+        "id": "unit",
+        "value": "currencyEUR"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Même graphique que « Consommation journalière », décalé d'un an (le prix utilisé reste le prix actuel).",
+   "timeFrom": "60d",
+   "hideTimeOverride": false,
+   "timeShift": "1y"
+  },
+  {
+   "id": 27,
+   "type": "row",
+   "title": "🔌 Réseau : tension et courant",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 53
+   },
+   "panels": []
+  },
+  {
+   "id": 28,
+   "type": "timeseries",
+   "title": "Tension (agrégats horaires)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"mean\") FROM \"downsampled\".\"URMS1_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Moyenne"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT min(\"min\") FROM \"downsampled\".\"URMS1_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Mini"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "C",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT max(\"max\") FROM \"downsampled\".\"URMS1_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Maxi"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 0,
+    "y": 54
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "min": 200,
+     "max": 260,
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 0,
+      "showPoints": "never",
+      "spanNulls": false,
+      "thresholdsStyle": {
+       "mode": "dashed"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "transparent",
+        "value": 207
+       },
+       {
+        "color": "red",
+        "value": 253
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Lignes rouges : limites réglementaires 207 V et 253 V.",
+   "timeFrom": "30d",
+   "hideTimeOverride": false,
+   "interval": "1h"
+  },
+  {
+   "id": 29,
+   "type": "timeseries",
+   "title": "Courant (agrégats horaires)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT mean(\"mean\") FROM \"downsampled\".\"IRMS1_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Moyenne"
+    },
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "B",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT max(\"max\") FROM \"downsampled\".\"IRMS1_1h\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+     "alias": "Maxi"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 12,
+    "y": 54
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "amp",
+     "min": 0,
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 10,
+      "showPoints": "never",
+      "spanNulls": false,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "timeFrom": "7d",
+   "hideTimeOverride": false,
+   "interval": "1h"
+  },
+  {
+   "id": 30,
+   "type": "row",
+   "title": "🛠️ Supervision de la collecte",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 61
+   },
+   "panels": []
+  },
+  {
+   "id": 31,
+   "type": "timeseries",
+   "title": "Trames reçues par heure",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT count(\"value\") FROM \"autogen\".\"SINSTS\" WHERE $timeFilter GROUP BY time(1h) fill(0)",
+     "alias": "Trames"
+    }
+   ],
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 0,
+    "y": 62
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "showPoints": "never",
+      "spanNulls": false,
+      "axisSoftMin": 0,
+      "thresholdsStyle": {
+       "mode": "off"
+      },
+      "gradientMode": "scheme"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1500
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Environ 2 000 trames par heure attendues.",
+   "timeFrom": "48h",
+   "hideTimeOverride": false
+  },
+  {
+   "id": 32,
+   "type": "timeseries",
+   "title": "Erreurs de checksum par heure",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "${DS_INFLUXDB}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "influxdb",
+      "uid": "${DS_INFLUXDB}"
+     },
+     "refId": "A",
+     "rawQuery": true,
+     "resultFormat": "time_series",
+     "query": "SELECT count(\"value\") FROM \"autogen\".\"verification_error\" WHERE $timeFilter GROUP BY time(1h) fill(0)",
+     "alias": "Erreurs"
+    }
+   ],
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 12,
+    "y": 62
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 0,
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "showPoints": "never",
+      "spanNulls": false,
+      "axisSoftMin": 0,
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Trames rejetées par le contrôle de checksum Enedis (parasites sur la liaison série).",
+   "timeFrom": "7d",
+   "hideTimeOverride": false
+  }
+ ],
+ "id": null,
+ "version": 1
+}

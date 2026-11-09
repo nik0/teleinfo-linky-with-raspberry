@@ -1,17 +1,8 @@
 # Téléinfo Linky avec un Raspberry Pi
 Surveiller sa consommation électrique en temps réel avec un compteur Linky et un Raspberry 
 
-Fonctionnalités :
-- lecture et analyse des trames reçus depuis la prise TIC d'un compteur électrique
-- gestion du mode historique et standard (consommation, tension, puissance, cout, production, etc...)
-- analyse numéro de compteur (fabriquant, numéro de série, puissance de coupure)
-- analyse de l'abonnement (option tarifaire, puissance souscrite, version teleinfo)
-- calcul du CosPhi (ajustement nécesssaire)
-- verification du checksum (intégration à finir)
-- registre de statut (developpement en cours)
-
-![grafana_std](https://github.com/Charlymd/teleinfo-linky-with-raspberry/blob/master/grafana_linky_standard.png)
-![grafana_std2](https://github.com/Charlymd/teleinfo-linky-with-raspberry/blob/master/grafana%20info%20compteur%20floute.png)
+![grafana_std](https://github.com/Charlymd/teleinfo-linky-with-raspberry/blob/master/documentation/grafana_linky_standard.png)
+![grafana_std2](https://github.com/Charlymd/teleinfo-linky-with-raspberry/blob/master/documentation/grafana%20info%20compteur%20floute.png)
 
 Basé sur le travail de Sebastien Reuiller qui m'a permis d'appréhender rapidement le fonctionnement de la prise de Télé Information Client (TIC)
 J'ai rajouté quelques fonctions telles que le calcul du checksum des valeurs d'index et la prise en charge de la tarification de base.
@@ -26,7 +17,7 @@ Les compteurs Linky sont livrés par défaut en mode historique pour permettre u
 Il est possible de les basculer en mode standard via l'espace client de votre fournisseur d'énergie (section configuration TIC) ou en appelant Enedis.
 
 Le mode standard permet d'accéder à plus d'informations dont la liste exaustive est ici :
-https://github.com/Charlymd/teleinfo-linky-with-raspberry/blob/master/liste_champs_mode_standard.txt
+https://github.com/Charlymd/teleinfo-linky-with-raspberry/blob/master/documentation/liste_champs_mode_standard.txt
 
 Exemple :
 - Tension instantanée et moyennée par phase
@@ -55,3 +46,27 @@ Tuto pas à pas sur le blog de Sebastien Reuiller : [Monitorer son compteur Link
 
 ## Sources diverses
 https://github.com/colloc-ahgm/linky-collector
+https://hallard.me/pitinfov12/
+https://linuxfr.org/forums/linux-general/posts/configurer-ttys0
+
+## Modifications de ce fork (branche `ameliorations-nik0`, basée sur `automode`)
+
+- **Checksum Enedis réactivé** : en mode standard, la tabulation précédant le checksum fait partie
+  de la somme (en mode historique, l'espace en est exclu). Le caractère de contrôle est lu avant
+  le `\r\n` final. Les groupes au checksum invalide sont ignorés et journalisés, avec le taux de
+  champs valides à chaque fin de trame.
+- **Décodage série robuste** : une ligne contenant un octet non ASCII (parasite) est rejetée au lieu
+  de faire planter la lecture ; la fin de trame (ETX) est détectée sur les octets bruts.
+- **Identifiants MQTT hors du code** : variables `MQTT_HOST`, `MQTT_PORT`, `MQTT_USER`,
+  `MQTT_PASSWORD` dans un fichier `.env` (voir `.env.example`), transmis au conteneur par
+  `docker --env-file` (non visibles dans `ps`).
+- **Exécution Docker** : `Dockerfile`, `command.sh` et `teleinfo.service` (systemd).
+- **InfluxDB** : `influxdb/setup_downsampling.sh` crée des agrégats horaires et journaliers
+  (jours en heure de Paris) conservés indéfiniment, et limite les trames brutes à 400 jours.
+  Les graphiques sur plusieurs mois répondent en quelques dizaines de millisecondes au lieu de
+  plusieurs dizaines de secondes sur un Raspberry Pi.
+- **Dashboard Grafana** : `grafana/conso-elec-base-standard.json` (import : Dashboards › Import,
+  puis choisir la source InfluxDB) : puissance instantanée et charge de l'abonnement,
+  consommation et coût (variable `prix_kwh`), projection de fin de mois, talon de consommation,
+  pics journaliers, comparaison avec l'année précédente, tension et courant, supervision de la
+  collecte (trames reçues, erreurs de checksum).
