@@ -49,7 +49,7 @@ https://github.com/colloc-ahgm/linky-collector
 https://hallard.me/pitinfov12/
 https://linuxfr.org/forums/linux-general/posts/configurer-ttys0
 
-## Modifications de ce fork (branche `ameliorations-nik0`, basée sur `automode`)
+## Modifications de ce fork
 
 - **Checksum Enedis réactivé** : en mode standard, la tabulation précédant le checksum fait partie
   de la somme (en mode historique, l'espace en est exclu). Le caractère de contrôle est lu avant
