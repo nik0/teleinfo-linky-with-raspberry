@@ -48,3 +48,25 @@ Tuto pas à pas sur le blog de Sebastien Reuiller : [Monitorer son compteur Link
 https://github.com/colloc-ahgm/linky-collector
 https://hallard.me/pitinfov12/
 https://linuxfr.org/forums/linux-general/posts/configurer-ttys0
+
+## Modifications de ce fork (branche `ameliorations-nik0`, basée sur `automode`)
+
+- **Checksum Enedis réactivé** : en mode standard, la tabulation précédant le checksum fait partie
+  de la somme (en mode historique, l'espace en est exclu). Le caractère de contrôle est lu avant
+  le `\r\n` final. Les groupes au checksum invalide sont ignorés et journalisés, avec le taux de
+  champs valides à chaque fin de trame.
+- **Décodage série robuste** : une ligne contenant un octet non ASCII (parasite) est rejetée au lieu
+  de faire planter la lecture ; la fin de trame (ETX) est détectée sur les octets bruts.
+- **Identifiants MQTT hors du code** : variables `MQTT_HOST`, `MQTT_PORT`, `MQTT_USER`,
+  `MQTT_PASSWORD` dans un fichier `.env` (voir `.env.example`), transmis au conteneur par
+  `docker --env-file` (non visibles dans `ps`).
+- **Exécution Docker** : `Dockerfile`, `command.sh` et `teleinfo.service` (systemd).
+- **InfluxDB** : `influxdb/setup_downsampling.sh` crée des agrégats horaires et journaliers
+  (jours en heure de Paris) conservés indéfiniment, et limite les trames brutes à 400 jours.
+  Les graphiques sur plusieurs mois répondent en quelques dizaines de millisecondes au lieu de
+  plusieurs dizaines de secondes sur un Raspberry Pi.
+- **Dashboard Grafana** : `grafana/conso-elec-base-standard.json` (import : Dashboards › Import,
+  puis choisir la source InfluxDB) : puissance instantanée et charge de l'abonnement,
+  consommation et coût (variable `prix_kwh`), projection de fin de mois, talon de consommation,
+  pics journaliers, comparaison avec l'année précédente, tension et courant, supervision de la
+  collecte (trames reçues, erreurs de checksum).

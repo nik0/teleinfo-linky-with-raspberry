@@ -1,20 +1,15 @@
 [Unit]
 Description=Teleinformation compteur Linky
-After=network-online.target
+After=docker.service
+Requires=docker.service
  
 [Service]
-Type=simple
- 
-User=root
-Group=root
-UMask=007
- 
-ExecStart=/usr/bin/python3 /opt/teleinfo-linky-with-raspberry/teleinfo.py
- 
-Restart=on-failure
- 
-# Configures the time to wait before service is stopped forcefully.
-TimeoutStopSec=30
+Restart=always
+ExecStartPre=-/usr/bin/docker rm -f teleinfo
+EnvironmentFile=-/home/pi/teleinfo-linky-with-raspberry/.env
+EnvironmentFile=-/etc/default/teleinfo
+ExecStart=/usr/bin/bash -c /home/pi/teleinfo-linky-with-raspberry/command.sh
+ExecStop=/usr/bin/docker stop teleinfo
  
 [Install]
 WantedBy=multi-user.target

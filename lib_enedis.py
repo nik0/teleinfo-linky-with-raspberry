@@ -9,7 +9,10 @@ class energy_meter():
         """
         registre={}
         # format 32 bits
-        registre_bin="{:032b}".format(int(registre_hexa))
+        if isinstance(registre_hexa, str):
+            registre_bin = "{:032b}".format(int(registre_hexa, 16))
+        else:
+            registre_bin = "{:032b}".format(int(registre_hexa))
         # décalage de 1 en lecture inversée
         # print(registre_bin)
 
